@@ -15,7 +15,9 @@ data class RawTuneUiState(
     val resumen: String = "Presiona 'Analizar Equipo' para generar el diagnóstico."
 )
 
-class RawTuneViewModel : ViewModel() {
+class RawTuneViewModel(
+    private val repository: com.upchiapas.kt_template.rawtune.data.repository.RawTuneRepository? = null
+) : ViewModel() {
     private val _uiState = MutableStateFlow(RawTuneUiState())
     val uiState: StateFlow<RawTuneUiState> = _uiState.asStateFlow()
 
