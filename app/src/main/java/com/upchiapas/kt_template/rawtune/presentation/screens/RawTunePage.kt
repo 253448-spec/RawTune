@@ -46,7 +46,22 @@ fun RawTunePage(
         onSaveProfile = { viewModel.saveCurrentProfile() },
         onDeleteProfile = { id -> viewModel.deleteProfile(id) },
         onLoadProfile = { profile -> viewModel.loadProfile(profile) },
-        onDismissMessage = { viewModel.clearUserMessage() }
+        onDismissMessage = { viewModel.clearUserMessage() },
+
+        // Eventos para el nuevo procesador manual
+        onOpenAddCpuDialog = { viewModel.toggleAddCpuDialog(true) },
+        onCloseAddCpuDialog = { viewModel.toggleAddCpuDialog(false) },
+        onDeleteCustomCpu = { id -> viewModel.deleteCustomCpu(id) },
+        onNewCpuNameChange = { name -> viewModel.updateNewCpuName(name) },
+        onNewCpuCoresChange = { cores -> viewModel.updateNewCpuCores(cores) },
+        onNewCpuThreadsChange = { threads -> viewModel.updateNewCpuThreads(threads) },
+        onNewCpuScoreChange = { score -> viewModel.updateNewCpuScore(score) },
+        onNewCpuRamTypeChange = { type -> viewModel.updateNewCpuRamType(type) },
+        onNewCpuHasGpuChange = { hasGpu -> viewModel.updateNewCpuHasGpu(hasGpu) },
+        onNewCpuGpuNameChange = { gpuName -> viewModel.updateNewCpuGpuName(gpuName) },
+        onNewCpuDescriptionChange = { desc -> viewModel.updateNewCpuDescription(desc) },
+        onNewCpuRamAlertChange = { alert -> viewModel.updateNewCpuRamAlert(alert) },
+        onSaveNewCpu = { viewModel.saveNewCpu() }
     )
 }
 
@@ -68,8 +83,46 @@ fun RawTuneContent(
     onDeleteProfile: (String) -> Unit,
     onLoadProfile: (SavedHardwareProfile) -> Unit,
     onDismissMessage: () -> Unit,
+    onOpenAddCpuDialog: () -> Unit,
+    onCloseAddCpuDialog: () -> Unit,
+    onDeleteCustomCpu: (String) -> Unit,
+    onNewCpuNameChange: (String) -> Unit,
+    onNewCpuCoresChange: (Int) -> Unit,
+    onNewCpuThreadsChange: (Int) -> Unit,
+    onNewCpuScoreChange: (Int) -> Unit,
+    onNewCpuRamTypeChange: (String) -> Unit,
+    onNewCpuHasGpuChange: (Boolean) -> Unit,
+    onNewCpuGpuNameChange: (String) -> Unit,
+    onNewCpuDescriptionChange: (String) -> Unit,
+    onNewCpuRamAlertChange: (String) -> Unit,
+    onSaveNewCpu: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    // Diálogo modal para agregar nuevo CPU
+    AddCpuDialog(
+        show = uiState.showAddCpuDialog,
+        name = uiState.newCpuName,
+        cores = uiState.newCpuCores,
+        threads = uiState.newCpuThreads,
+        score = uiState.newCpuScore,
+        ramType = uiState.newCpuRamType,
+        hasGpu = uiState.newCpuHasGpu,
+        gpuName = uiState.newCpuGpuName,
+        description = uiState.newCpuDescription,
+        ramAlert = uiState.newCpuRamAlert,
+        onNameChange = onNewCpuNameChange,
+        onCoresChange = onNewCpuCoresChange,
+        onThreadsChange = onNewCpuThreadsChange,
+        onScoreChange = onNewCpuScoreChange,
+        onRamTypeChange = onNewCpuRamTypeChange,
+        onHasGpuChange = onNewCpuHasGpuChange,
+        onGpuNameChange = onNewCpuGpuNameChange,
+        onDescriptionChange = onNewCpuDescriptionChange,
+        onRamAlertChange = onNewCpuRamAlertChange,
+        onDismiss = onCloseAddCpuDialog,
+        onConfirm = onSaveNewCpu
+    )
+
     Scaffold(
         modifier = modifier,
         topBar = {
@@ -135,11 +188,13 @@ fun RawTuneContent(
                 fontSize = 18.sp
             )
 
-            // Componente 1: Selector de Procesador
+            // Componente 1: Selector de Procesador con botón de Agregar CPU y Ficha Técnica
             CpuDropdownSelector(
                 availableCpus = uiState.availableCpus,
                 selectedCpu = uiState.selectedCpu,
-                onCpuSelected = onCpuSelected
+                onCpuSelected = onCpuSelected,
+                onOpenAddCpuDialog = onOpenAddCpuDialog,
+                onDeleteCustomCpu = onDeleteCustomCpu
             )
 
             // Componente 2: Configuración de RAM
@@ -158,7 +213,7 @@ fun RawTuneContent(
                 onSaveProfile = onSaveProfile
             )
 
-            // Componente 4: Resultados del Diagnóstico
+            // Componente 4: Resultados del Diagnóstico con Alertas
             DiagnosticMetricsCard(
                 result = uiState.analysisResult
             )
@@ -178,14 +233,28 @@ fun RawTuneContent(
 @Preview(showBackground = true)
 @Composable
 private fun RawTuneContentPreview() {
-    val sampleCpu = CpuOption("r5_5600", "AMD Ryzen 5 5600", 6, 12, 70, "DDR4")
+    val sampleCpu = CpuOption(
+        id = "r5_5600",
+        name = "AMD Ryzen 5 5600",
+        cores = 6,
+        threads = 12,
+        baseScore = 74,
+        recommendedRamType = "DDR4",
+        hasIntegratedGpu = false,
+        integratedGpuName = "Ninguno",
+        description = "Excelente procesador calidad-precio para gaming y desarrollo.",
+        ramRecommendation = "Recomendado 16GB a 32GB DDR4 a 3200MHz."
+    )
     val sampleResult = AnalysisResult(
         score = 82,
         bandwidthGbps = 51.2,
         bottleneckPercentage = 15,
         status = "Rendimiento Óptimo",
         summary = "Excelente configuración balanceada para desarrollo móvil y multitarea.",
-        recommendations = listOf("El balance entre CPU y memoria se encuentra dentro del rango óptimo.")
+        recommendations = listOf(
+            "Recomendado 16GB a 32GB DDR4 a 3200MHz.",
+            "El balance entre CPU y memoria se encuentra dentro del rango óptimo."
+        )
     )
 
     MaterialTheme {
@@ -208,7 +277,20 @@ private fun RawTuneContentPreview() {
             onSaveProfile = {},
             onDeleteProfile = {},
             onLoadProfile = {},
-            onDismissMessage = {}
+            onDismissMessage = {},
+            onOpenAddCpuDialog = {},
+            onCloseAddCpuDialog = {},
+            onDeleteCustomCpu = {},
+            onNewCpuNameChange = {},
+            onNewCpuCoresChange = {},
+            onNewCpuThreadsChange = {},
+            onNewCpuScoreChange = {},
+            onNewCpuRamTypeChange = {},
+            onNewCpuHasGpuChange = {},
+            onNewCpuGpuNameChange = {},
+            onNewCpuDescriptionChange = {},
+            onNewCpuRamAlertChange = {},
+            onSaveNewCpu = {}
         )
     }
 }

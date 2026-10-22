@@ -33,4 +33,12 @@ class RawTuneRepositoryImpl(
     override fun deleteProfile(profileId: String) {
         dataSource.deleteProfile(profileId)
     }
+
+    override fun addCustomCpu(cpu: CpuOption) {
+        dataSource.saveCustomCpu(cpu)
+    }
+
+    override fun deleteCustomCpu(cpuId: String) {
+        dataSource.deleteCustomCpu(cpuId)
+    }
 }

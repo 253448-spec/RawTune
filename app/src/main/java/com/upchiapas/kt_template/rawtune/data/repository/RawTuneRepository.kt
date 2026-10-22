@@ -12,4 +12,8 @@ interface RawTuneRepository {
     fun getSavedProfiles(): List<SavedHardwareProfile>
     fun saveProfile(profile: SavedHardwareProfile)
     fun deleteProfile(profileId: String)
+
+    // Gestión manual de nuevos CPUs con persistencia
+    fun addCustomCpu(cpu: CpuOption)
+    fun deleteCustomCpu(cpuId: String)
 }

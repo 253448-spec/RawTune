@@ -13,7 +13,19 @@ data class RawTuneUiState(
     val analysisResult: AnalysisResult? = null,
     val savedProfiles: List<SavedHardwareProfile> = emptyList(),
     val isAnalyzing: Boolean = false,
-    val userMessage: String? = null
+    val userMessage: String? = null,
+
+    // Estado para el formulario/diálogo de agregar nuevo CPU manual
+    val showAddCpuDialog: Boolean = false,
+    val newCpuName: String = "",
+    val newCpuCores: Int = 6,
+    val newCpuThreads: Int = 12,
+    val newCpuScore: Int = 75,
+    val newCpuRamType: String = "DDR4",
+    val newCpuHasGpu: Boolean = false,
+    val newCpuGpuName: String = "",
+    val newCpuDescription: String = "",
+    val newCpuRamAlert: String = ""
 ) {
     // Propiedades calculadas y de compatibilidad
     val cpu: String

@@ -6,5 +6,9 @@ data class CpuOption(
     val cores: Int,
     val threads: Int,
     val baseScore: Int,
-    val recommendedRamType: String
+    val recommendedRamType: String,
+    val hasIntegratedGpu: Boolean = false,
+    val integratedGpuName: String = "Ninguno",
+    val description: String = "Procesador para propósito general.",
+    val ramRecommendation: String = "Configuración balanceada estándar."
 )

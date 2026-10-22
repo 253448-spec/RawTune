@@ -43,14 +43,17 @@ class RawTuneViewModel(
 
     fun selectCpu(cpu: CpuOption) {
         _uiState.update { it.copy(selectedCpu = cpu, userMessage = null) }
+        analyzeHardware()
     }
 
     fun updateRam(ramGb: Int) {
         _uiState.update { it.copy(ramGb = ramGb, userMessage = null) }
+        analyzeHardware()
     }
 
     fun updateRamType(ramType: String) {
         _uiState.update { it.copy(ramType = ramType, userMessage = null) }
+        analyzeHardware()
     }
 
     fun updateProfileName(name: String) {
@@ -70,7 +73,7 @@ class RawTuneViewModel(
         _uiState.update {
             it.copy(
                 analysisResult = result,
-                userMessage = "Diagnóstico actualizado correctamente."
+                userMessage = "Diagnóstico actualizado para ${cpu.name}."
             )
         }
     }
@@ -102,7 +105,7 @@ class RawTuneViewModel(
             it.copy(
                 savedProfiles = updatedProfiles,
                 customProfileName = "",
-                userMessage = "¡Perfil '$profileName' guardado con éxito!"
+                userMessage = "¡Ensamble '$profileName' guardado con éxito en memoria!"
             )
         }
     }
@@ -129,7 +132,7 @@ class RawTuneViewModel(
                 ramGb = profile.ramGb,
                 ramType = profile.ramType,
                 customProfileName = profile.name,
-                userMessage = "Perfil '${profile.name}' cargado en el simulador."
+                userMessage = "Ensamble '${profile.name}' cargado en el optimizador."
             )
         }
         analyzeHardware()
@@ -139,7 +142,130 @@ class RawTuneViewModel(
         _uiState.update { it.copy(userMessage = null) }
     }
 
-    // Funciones de compatibilidad hacia atrás
+    // ==========================================
+    // GESTIÓN MANUAL DE NUEVOS PROCESADORES (CPU)
+    // ==========================================
+    fun toggleAddCpuDialog(show: Boolean) {
+        _uiState.update { it.copy(showAddCpuDialog = show) }
+    }
+
+    fun updateNewCpuName(value: String) {
+        _uiState.update { it.copy(newCpuName = value) }
+    }
+
+    fun updateNewCpuCores(value: Int) {
+        _uiState.update { it.copy(newCpuCores = value) }
+    }
+
+    fun updateNewCpuThreads(value: Int) {
+        _uiState.update { it.copy(newCpuThreads = value) }
+    }
+
+    fun updateNewCpuScore(value: Int) {
+        _uiState.update { it.copy(newCpuScore = value) }
+    }
+
+    fun updateNewCpuRamType(value: String) {
+        _uiState.update { it.copy(newCpuRamType = value) }
+    }
+
+    fun updateNewCpuHasGpu(value: Boolean) {
+        _uiState.update { it.copy(newCpuHasGpu = value) }
+    }
+
+    fun updateNewCpuGpuName(value: String) {
+        _uiState.update { it.copy(newCpuGpuName = value) }
+    }
+
+    fun updateNewCpuDescription(value: String) {
+        _uiState.update { it.copy(newCpuDescription = value) }
+    }
+
+    fun updateNewCpuRamAlert(value: String) {
+        _uiState.update { it.copy(newCpuRamAlert = value) }
+    }
+
+    fun saveNewCpu() {
+        val current = _uiState.value
+        val name = current.newCpuName.trim()
+        if (name.isBlank()) {
+            _uiState.update { it.copy(userMessage = "Por favor ingresa un nombre para el procesador.") }
+            return
+        }
+
+        val gpuName = if (current.newCpuHasGpu) {
+            if (current.newCpuGpuName.isNotBlank()) current.newCpuGpuName.trim() else "GPU Integrada Básica"
+        } else {
+            "Ninguno"
+        }
+
+        val description = if (current.newCpuDescription.isNotBlank()) {
+            current.newCpuDescription.trim()
+        } else {
+            "Procesador personalizado de ${current.newCpuCores} núcleos y ${current.newCpuThreads} hilos."
+        }
+
+        val ramAlert = if (current.newCpuRamAlert.isNotBlank()) {
+            current.newCpuRamAlert.trim()
+        } else {
+            "Recomendado mínimo 16GB ${current.newCpuRamType}."
+        }
+
+        val newCpu = CpuOption(
+            id = "custom_${System.currentTimeMillis()}",
+            name = name,
+            cores = current.newCpuCores,
+            threads = current.newCpuThreads,
+            baseScore = current.newCpuScore,
+            recommendedRamType = current.newCpuRamType,
+            hasIntegratedGpu = current.newCpuHasGpu,
+            integratedGpuName = gpuName,
+            description = description,
+            ramRecommendation = ramAlert
+        )
+
+        // Persistir en SharedPreferences a través del Repository
+        repository.addCustomCpu(newCpu)
+        val updatedCpus = repository.getAvailableCpus()
+
+        _uiState.update {
+            it.copy(
+                availableCpus = updatedCpus,
+                selectedCpu = newCpu,
+                showAddCpuDialog = false,
+                newCpuName = "",
+                newCpuCores = 6,
+                newCpuThreads = 12,
+                newCpuScore = 75,
+                newCpuRamType = "DDR4",
+                newCpuHasGpu = false,
+                newCpuGpuName = "",
+                newCpuDescription = "",
+                newCpuRamAlert = "",
+                userMessage = "¡Procesador '$name' agregado y persistido en la app!"
+            )
+        }
+
+        // Recalcular el análisis con el nuevo procesador seleccionado
+        analyzeHardware()
+    }
+
+    fun deleteCustomCpu(cpuId: String) {
+        repository.deleteCustomCpu(cpuId)
+        val updatedCpus = repository.getAvailableCpus()
+        val nextCpu = updatedCpus.firstOrNull()
+
+        _uiState.update {
+            it.copy(
+                availableCpus = updatedCpus,
+                selectedCpu = if (it.selectedCpu?.id == cpuId) nextCpu else it.selectedCpu,
+                userMessage = "Procesador eliminado de la base local."
+            )
+        }
+        analyzeHardware()
+    }
+
+    // Compatibilidad
     fun actualizarRam(nuevaRam: Int) = updateRam(nuevaRam)
     fun actualizarRamTipo(nuevoTipo: String) = updateRamType(nuevoTipo)
     fun analizarHardware() = analyzeHardware()
