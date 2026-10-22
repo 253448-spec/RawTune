@@ -1,5 +1,16 @@
 <resources>
-    <string name="app_name">Tip Calculator</string>
+    <!-- Configuración principal de la aplicación -->
+    <string name="app_name">RawTune Mobile</string>
+    <string name="app_title">RawTune - Optimizador de Hardware</string>
+    <string name="section_config">Configuración de Hardware</string>
+    <string name="cpu_label">Procesador (CPU)</string>
+    <string name="ram_label">Memoria RAM</string>
+    <string name="btn_analyze">Analizar Ensamble</string>
+    <string name="btn_save_profile">Guardar en Historial</string>
+    <string name="saved_profiles_title">Ensambles Guardados (Persistencia)</string>
+    <string name="profile_name_hint">Nombre del ensamble (ej. PC Gamer Casa)</string>
+
+    <!-- Recursos de compatibilidad con módulos de plantilla -->
     <string name="calculate_tip">Calculate Tip</string>
     <string name="bill_amount">Bill Amount</string>
     <string name="how_was_the_service">Tip Percentage</string>

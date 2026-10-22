@@ -4,7 +4,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import com.upchiapas.kt_template.quiz.presentation.screens.QuizPage
+import com.upchiapas.kt_template.rawtune.presentation.screens.RawTunePage
 import com.upchiapas.kt_template.ui.theme.Kt_templateTheme
 
 class MainActivity : ComponentActivity() {
@@ -14,7 +14,7 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             Kt_templateTheme {
-                QuizPage()
+                RawTunePage()
             }
         }
     }
