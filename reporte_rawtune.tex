@@ -1,0 +1,357 @@
+\documentclass[12pt,a4paper]{article}
+
+% --- PAQUETES FUNDAMENTALES PARA OVERLEAF ---
+\usepackage[utf8]{inputenc}
+\usepackage[spanish,es-nodecimaldot]{babel}
+\usepackage[margin=2.5cm]{geometry}
+\usepackage{graphicx}
+\usepackage{amsmath,amssymb}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{xcolor}
+\usepackage{listings}
+\usepackage{fancyhdr}
+\usepackage{hyperref}
+\usepackage{float}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{tikz}
+\usetikzlibrary{shapes.geometric, arrows.meta, positioning}
+
+% --- COLORES CORPORATIVOS Y CÓDIGO ---
+\definecolor{primaryBlue}{RGB}{24, 76, 120}
+\definecolor{accentOrange}{RGB}{230, 81, 0}
+\definecolor{darkGreen}{RGB}{46, 125, 50}
+\definecolor{lightGray}{RGB}{245, 247, 250}
+\definecolor{codeBackground}{RGB}{248, 249, 250}
+\definecolor{codeKeyword}{RGB}{0, 51, 179}
+\definecolor{codeString}{RGB}{6, 125, 23}
+\definecolor{codeComment}{RGB}{128, 128, 128}
+
+% --- CONFIGURACIÓN DE LISTINGS (KOTLIN) ---
+\lstdefinelanguage{Kotlin}{
+  keywords={package, import, val, var, fun, class, interface, data, object, private, override, by, lazy, when, if, else, return, init},
+  keywordstyle=\color{codeKeyword}\bfseries,
+  ndkeywords={Boolean, Int, String, Double, Float, List, StateFlow, MutableStateFlow, ViewModel},
+  ndkeywordstyle=\color{primaryBlue}\bfseries,
+  sensitive=true,
+  comment=[l]{//},
+  morecomment=[s]{/*}{*/},
+  commentstyle=\color{codeComment}\itshape,
+  stringstyle=\color{codeString},
+  morestring=[b]",
+  morestring=[s]{"""*}{*"""}
+}
+
+\lstset{
+  language=Kotlin,
+  backgroundcolor=\color{codeBackground},
+  basicstyle=\ttfamily\footnotesize,
+  breaklines=true,
+  frame=single,
+  rulecolor=\color{black!20},
+  numbers=left,
+  numberstyle=\tiny\color{black!50},
+  showspaces=false,
+  showstringspaces=false,
+  captionpos=b,
+  tabsize=2
+}
+
+% --- CONFIGURACIÓN DE ENCABEZADOS Y PIES DE PÁGINA ---
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\footnotesize \textsc{UP Chiapas} | Desarrollo de Aplicaciones Móviles}
+\fancyhead[R]{\footnotesize \textbf{RawTune Mobile} - Reporte Técnico}
+\fancyfoot[C]{\thepage}
+\renewcommand{\headrulewidth}{0.5pt}
+
+\hypersetup{
+    colorlinks=true,
+    linkcolor=primaryBlue,
+    urlcolor=accentOrange,
+    citecolor=darkGreen
+}
+
+% =========================================================================
+%                               DOCUMENTO
+% =========================================================================
+\begin{document}
+
+% --- PORTADA FORMAL ACADÉMICA ---
+\begin{titlepage}
+    \centering
+    \vspace*{1cm}
+    
+    {\scshape\Large Universidad Politécnica de Chiapas \par}
+    \vspace{0.3cm}
+    {\scshape\large Ingeniería en Tecnologías de la Información e Innovación Digital \par}
+    
+    \vspace{1.5cm}
+    \rule{\linewidth}{1.5pt} \\[0.4cm]
+    {\huge \bfseries RawTune Mobile: Optimizador y Simulador de Hardware PC/Mobile \\[0.3cm]}
+    {\large \textbf{Reporte Arquitectónico, MVVM y Persistencia Local (Unidad II)}}
+    \rule{\linewidth}{1.5pt}
+    
+    \vspace{1.8cm}
+    
+    \begin{minipage}[t]{0.45\textwidth}
+        \textbf{Asignatura:} \\
+        Desarrollo de Aplicaciones Móviles \\[0.3cm]
+        \textbf{Período Cuatrimestral:} \\
+        Septiembre -- Diciembre 2026 \\[0.3cm]
+        \textbf{Docente Titular:} \\
+        Academia de Desarrollo Móvil
+    \end{minipage}
+    \hfill
+    \begin{minipage}[t]{0.45\textwidth}
+        \begin{flushright}
+            \textbf{Estudiante:} \\
+            Salazar (253448-spec) \\[0.3cm]
+            \textbf{Matrícula:} \\
+            253448 \\[0.3cm]
+            \textbf{Correo Institucional:} \\
+            \texttt{253448@it2id.upchiapas.edu.mx}
+        \end{flushright}
+    \end{minipage}
+    
+    \vfill
+    {\large Suchiapa, Chiapas, México \\ \today \par}
+\end{titlepage}
+
+\tableofcontents
+\newpage
+
+% =========================================================================
+% 1. INTRODUCCIÓN Y OBJETIVOS
+% =========================================================================
+\section{Introducción y Objetivos del Proyecto}
+
+El presente proyecto documenta el diseño, construcción y validación técnica de \textbf{RawTune Mobile}, una aplicación nativa desarrollada bajo el sistema operativo Android utilizando el toolkit moderno declarativo \textbf{Jetpack Compose} y el lenguaje \textbf{Kotlin}.
+
+\subsection{Objetivo General}
+Diseñar e implementar una solución móvil que cumpla con los lineamientos de la \textbf{Unidad II: Diseño de aplicaciones móviles}, aplicando estrictamente la arquitectura por capas \textbf{Model-View-ViewModel (MVVM)}, el patrón de Inyección de Dependencias manual y el almacenamiento local mediante mecanismos de clave-valor (\texttt{SharedPreferences}), respetando la restricción técnica absoluta de \textbf{no emplear bases de datos relacionales (SQLite / Room) ni servicios API remotos}.
+
+\subsection{Dominio de la Solución (RawTune)}
+RawTune es una herramienta diagnóstica y optimizadora de especificaciones de hardware. Permite al usuario modelar ensambles computacionales seleccionando procesadores (CPU), capacidades de memoria RAM (de 4 a 64 GB) y tecnologías de bus (DDR4 vs. DDR5). El sistema calcula en tiempo real métricas de ancho de banda teórico en gigabytes por segundo (GB/s), porcentajes de cuello de botella (\textit{bottleneck}) y calificaciones integrales de rendimiento, ofreciendo retroalimentación contextual y recomendaciones técnicas sobre memorias de doble canal y gráficos integrados (iGPU).
+
+% =========================================================================
+% 2. FASE 1: ESPECIFICACIÓN DE REQUISITOS (ENTREGABLE 1)
+% =========================================================================
+\section{Fase 1: Especificación de Requisitos}
+
+\subsection{Requisitos Funcionales (RF)}
+\begin{table}[H]
+\centering
+\small
+\begin{tabular}{@{}llp{10cm}@{}}
+\toprule
+\textbf{ID} & \textbf{Nombre} & \textbf{Descripción} \\ \midrule
+\textbf{RF-01} & Selección de CPU & Permite al usuario seleccionar un procesador desde un catálogo inicial o personalizado. \\
+\textbf{RF-02} & Configuración de RAM & Permite configurar la capacidad de memoria RAM mediante un deslizador interactivo (\textit{Slider}) de 4 a 64 GB. \\
+\textbf{RF-03} & Selección de Tecnología & Permite alternar la tecnología de memoria entre DDR4 (3200 MT/s) y DDR5 (6000 MT/s) mediante \textit{FilterChips}. \\
+\textbf{RF-04} & Cálculo y Diagnóstico & Procesa de forma concurrente el puntaje global (0-100), ancho de banda y cuello de botella del ensamble. \\
+\textbf{RF-05} & Alta Manual de Procesadores & Permite al usuario dar de alta nuevos procesadores a mano con núcleos, hilos, GPU integrado y alertas de RAM. \\
+\textbf{RF-06} & Persistencia de Ensambles & Permite guardar configuraciones en el almacenamiento local (\texttt{SharedPreferences}) y recuperarlas posteriormente. \\
+\textbf{RF-07} & Eliminación y Gestión & Permite eliminar perfiles guardados o CPUs personalizados creados por el usuario. \\ \bottomrule
+\end{tabular}
+\caption{Matriz de Requisitos Funcionales del Sistema.}
+\end{table}
+
+\subsection{Requisitos No Funcionales (RNF)}
+\begin{itemize}
+    \item \textbf{RNF-01 (Arquitectura):} Separación estricta de responsabilidades entre \texttt{Presentation}, \texttt{Domain/DI} y \texttt{Data}.
+    \item \textbf{RNF-02 (UDF e Inmutabilidad):} El flujo de datos debe ser estrictamente unidireccional (\textit{Unidirectional Data Flow}) empleando \texttt{StateFlow} inmutable.
+    \item \textbf{RNF-03 (Stateless Components):} Los componentes de interfaz deben ser desacoplados mediante \textit{State Hoisting}.
+    \item \textbf{RNF-04 (Restricción de Persistencia):} Almacenamiento local mediante \texttt{SharedPreferences} estructurado, sin bibliotecas relacionales (Room/SQLite).
+    \item \textbf{RNF-05 (Compatibilidad):} Compatibilidad mínima con Android 8.0 (API nivel 26) y compilación nativa en JVM 21 con Kotlin 2.4.
+\end{itemize}
+
+% =========================================================================
+% 3. FASE 2: DISEÑO ARQUITECTÓNICO Y FLUJO DE DATOS
+% =========================================================================
+\section{Fase 2: Arquitectura de Software y Patrón MVVM}
+
+La aplicación implementa una arquitectura modular inspirada en \textbf{Clean Architecture} y las directrices de arquitectura oficial de Google Android.
+
+\subsection{Diagrama de Flujo Arquitectónico}
+A continuación se ilustra la interacción entre las capas:
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[
+    box/.style={rectangle, draw=primaryBlue, fill=lightGray, rounded corners=3pt, thick, align=center, inner sep=6pt},
+    dataBox/.style={rectangle, draw=darkGreen, fill=green!5, rounded corners=3pt, thick, align=center, inner sep=6pt},
+    diBox/.style={rectangle, draw=accentOrange, fill=orange!5, rounded corners=3pt, thick, align=center, inner sep=6pt},
+    arrow/.style={-{Latex[scale=1.0]}, thick}
+]
+    % Capa Presentación
+    \node[box, fill=blue!10] (page) {\textbf{RawTunePage (Stateful)}\\ \small Conecta ViewModel y ciclo de vida};
+    \node[box, below=1.2cm of page] (content) {\textbf{RawTuneContent (Stateless)}\\ \small Renderiza componentes hijos y emite lambdas};
+    
+    % ViewModel
+    \node[box, right=2.0cm of page, fill=blue!15] (vm) {\textbf{RawTuneViewModel}\\ \small Expone StateFlow y ejecuta lógica};
+    
+    % DI
+    \node[diBox, above=1.2cm of vm] (di) {\textbf{RawTuneModule / Factory}\\ \small Inyección manual (\texttt{by lazy})};
+    
+    % Capa de Datos
+    \node[dataBox, right=2.0cm of vm] (repo) {\textbf{RawTuneRepository}\\ \small Interfaz desacoplada};
+    \node[dataBox, below=1.0cm of repo] (ds) {\textbf{RawTuneLocalDataSource}\\ \small Catálogo semilla + Fórmulas};
+    \node[dataBox, below=1.0cm of ds, fill=yellow!10] (sp) {\textbf{SharedPreferences}\\ \small Archivo clave-valor \texttt{rawtune\_storage}};
+
+    % Conexiones
+    \draw[arrow] (page) -- node[left, font=\footnotesize] {UiState inmutable} (content);
+    \draw[arrow] (content.west) to[out=150,in=210] node[left, font=\footnotesize] {Lambdas: \texttt{() -> Unit}} (page.west);
+    \draw[arrow] (page) -- node[above, font=\footnotesize] {Observa \texttt{uiState}} (vm);
+    \draw[arrow] (vm) -- node[above, font=\footnotesize] {Consume} (repo);
+    \draw[arrow] (di) -- node[right, font=\footnotesize] {Inyecta} (vm);
+    \draw[arrow] (repo) -- node[right, font=\footnotesize] {Delega en} (ds);
+    \draw[arrow] (ds) -- node[right, font=\footnotesize] {Lectura / Escritura} (sp);
+\end{tikzpicture}
+\caption{Diagrama de Flujo Unidireccional de Datos (UDF) y Capas de la Aplicación.}
+\label{fig:arquitectura}
+\end{figure}
+
+\subsection{Estructura de Paquetes en el Proyecto}
+Para satisfacer los estándares de calidad de código y modularidad exigidos por la plantilla del docente, se estructuró el paquete \texttt{com.upchiapas.kt\_template.rawtune}:
+
+\begin{itemize}
+    \item \texttt{rawtune.data.model}: Entidades de datos inmutables (\texttt{CpuOption}, \texttt{HardwareSpecs}, \texttt{AnalysisResult}, \texttt{SavedHardwareProfile}).
+    \item \texttt{rawtune.data.datasource}: Manejo directo de colecciones en memoria, datos semilla y persistencia en \texttt{SharedPreferences} (\texttt{RawTuneLocalDataSource}).
+    \item \texttt{rawtune.data.repository}: Contrato (\texttt{RawTuneRepository}) e implementación concreta (\texttt{RawTuneRepositoryImpl}).
+    \item \texttt{rawtune.di}: Módulo de dependencias perezosas (\texttt{RawTuneModule}) enlazado al \texttt{KtApplication}.
+    \item \texttt{rawtune.presentation.viewmodels}: \texttt{RawTuneViewModel} y \texttt{RawTuneViewModelFactory}.
+    \item \texttt{rawtune.presentation.screens}: \texttt{RawTunePage} (Stateful/Stateless) y \texttt{RawTuneUiState}.
+    \item \texttt{rawtune.presentation.components}: 6+ componentes reutilizables sin estado (\texttt{CpuDropdownSelector}, \texttt{RamConfigCard}, \texttt{DiagnosticMetricsCard}, \texttt{AddCpuDialog}, \texttt{SaveProfileSection}, \texttt{SavedProfilesList}).
+\end{itemize}
+
+% =========================================================================
+% 4. IMPLEMENTACIÓN TÉCNICA Y PERSISTENCIA LOCAL
+% =========================================================================
+\section{Implementación Técnica y Persistencia Local}
+
+\subsection{Gestión de Estados Reactivos con StateFlow}
+El patrón de diseño garantiza inmutabilidad estricta. El estado completo de la pantalla se centraliza en la data class \texttt{RawTuneUiState}, expuesta mediante el patrón \textit{Backing Property}:
+
+\begin{lstlisting}[caption={Patrón Backing Property en RawTuneViewModel.kt}]
+class RawTuneViewModel(
+    private val repository: RawTuneRepository
+) : ViewModel() {
+
+    // Flujo mutable privado para modificaciones internas atómicas
+    private val _uiState = MutableStateFlow(RawTuneUiState())
+    
+    // Flujo público inmutable de solo lectura para la vista
+    val uiState: StateFlow<RawTuneUiState> = _uiState.asStateFlow()
+
+    fun updateRam(ramGb: Int) {
+        _uiState.update { it.copy(ramGb = ramGb) }
+        analyzeHardware()
+    }
+}
+\end{lstlisting}
+
+\subsection{Persistencia Clave-Valor sin SQLite/Room}
+En cumplimiento con la restricción técnica de la Unidad II, la persistencia de perfiles y de nuevos procesadores creados por el usuario se gestiona a través de la interfaz nativa \texttt{SharedPreferences}:
+
+\begin{lstlisting}[caption={Persistencia de procesadores en RawTuneLocalDataSource.kt}]
+fun saveCustomCpu(cpu: CpuOption) {
+    val sp = prefs ?: return
+    val rawIds = sp.getString("custom_cpu_ids_list", "") ?: ""
+    val existingIds = rawIds.split(",").filter { it.isNotBlank() }.toMutableList()
+    
+    if (!existingIds.contains(cpu.id)) {
+        existingIds.add(0, cpu.id)
+    }
+
+    sp.edit()
+        .putString("custom_cpu_ids_list", existingIds.joinToString(","))
+        .putString("cpu_${cpu.id}_name", cpu.name)
+        .putInt("cpu_${cpu.id}_cores", cpu.cores)
+        .putInt("cpu_${cpu.id}_threads", cpu.threads)
+        .putInt("cpu_${cpu.id}_score", cpu.baseScore)
+        .putString("cpu_${cpu.id}_ram_type", cpu.recommendedRamType)
+        .putBoolean("cpu_${cpu.id}_has_gpu", cpu.hasIntegratedGpu)
+        .putString("cpu_${cpu.id}_gpu_name", cpu.integratedGpuName)
+        .putString("cpu_${cpu.id}_desc", cpu.description)
+        .putString("cpu_${cpu.id}_ram_alert", cpu.ramRecommendation)
+        .apply()
+}
+\end{lstlisting}
+
+% =========================================================================
+% 5. APARTADO DE CAPTURAS DE PANTALLA DE LA APLICACIÓN
+% =========================================================================
+\section{Fase 3: Resultados Visuales y Galería de la Aplicación}
+
+En esta sección se evidencian las vistas y componentes construidos con Jetpack Compose. 
+
+\begin{figure}[H]
+    \centering
+    % Para colocar tu imagen en Overleaf:
+    % 1. Sube tu imagen en el panel izquierdo (ej. 'pantalla_principal.png')
+    % 2. Descomenta la siguiente línea y elimina el placeholder:
+    % \includegraphics[width=0.48\textwidth]{pantalla_principal.png}
+    \fbox{\parbox[c][8cm][c]{0.45\textwidth}{\centering \textbf{[CAPTURA 1: PANTALLA PRINCIPAL]}\\[0.3cm] \small Inserte aquí captura con el TopAppBar, Selector de CPU, Slider de RAM y Chips DDR4/DDR5.}}
+    \hfill
+    % \includegraphics[width=0.48\textwidth]{diagnostico_metricas.png}
+    \fbox{\parbox[c][8cm][c]{0.45\textwidth}{\centering \textbf{[CAPTURA 2: DIAGNÓSTICO Y MÉTRICAS]}\\[0.3cm] \small Inserte aquí captura mostrando la barra de progreso lineal de puntaje, ancho de banda y alertas de RAM.}}
+    \caption{Interfaz Principal: Configuración de Hardware y Diagnóstico en Tiempo Real.}
+    \label{fig:interfaz_principal}
+\end{figure}
+
+\vspace{0.5cm}
+
+\begin{figure}[H]
+    \centering
+    % \includegraphics[width=0.48\textwidth]{dialogo_agregar_cpu.png}
+    \fbox{\parbox[c][8cm][c]{0.45\textwidth}{\centering \textbf{[CAPTURA 3: ALTA MANUAL DE CPU]}\\[0.3cm] \small Inserte aquí captura del diálogo modal \texttt{AddCpuDialog} mostrando los campos de núcleos, switch de GPU integrado y alertas.}}
+    \hfill
+    % \includegraphics[width=0.48\textwidth]{historial_persistente.png}
+    \fbox{\parbox[c][8cm][c]{0.45\textwidth}{\centering \textbf{[CAPTURA 4: HISTORIAL PERSISTENTE]}\\[0.3cm] \small Inserte aquí captura de la sección inferior con la lista de ensambles guardados en \texttt{SharedPreferences}.}}
+    \caption{Funciones Avanzadas: Registro Manual de Procesadores y Persistencia Local.}
+    \label{fig:interfaz_avanzada}
+\end{figure}
+
+% =========================================================================
+% 6. HISTORIAL DE COMMITS
+% =========================================================================
+\section{Historial Incremental de Commits en Git}
+
+En apego riguroso a la condición obligatoria de contar con un historial evolutivo verificable, el repositorio en GitHub (\url{https://github.com/253448-spec/RawTune}) cuenta con 6 commits secuenciales:
+
+\begin{table}[H]
+\centering
+\small
+\begin{tabular}{@{}cclp{7.5cm}@{}}
+\toprule
+\textbf{\#} & \textbf{Hash} & \textbf{Etiqueta del Commit} & \textbf{Aporte Técnico Principal} \\ \midrule
+1 & \texttt{8a728dd} & Commit 1: Vista RawTuneScreen inicial & Maquetado preliminar en Compose y ViewModel base. \\
+2 & \texttt{8f15e75} & Commit 2: Capa de datos y modelos & Creación de modelos de datos, \texttt{RawTuneLocalDataSource} y contrato de repositorio. \\
+3 & \texttt{fc90a2f} & Commit 3: Inyección de Dependencias & Creación de \texttt{KtApplication.kt}, \texttt{RawTuneModule} y \texttt{ViewModelFactory}. \\
+4 & \texttt{1b789a8} & Commit 4: Persistencia y UiState & Desacoplamiento de \texttt{RawTuneUiState}, persistencia en \texttt{SharedPreferences} y reactividad UDF. \\
+5 & \texttt{d18ff1e} & Commit 5: Componentes modulares & 100\% Stateless components, separación Stateful/Stateless y enlace con \texttt{MainActivity}. \\
+6 & \texttt{370b5a7} & Commit 6: Alta manual de procesadores & Modal interactivo para agregar CPUs a mano con GPU integrado, alertas y recálculo dinámico. \\ \bottomrule
+\end{tabular}
+\caption{Historial Oficial de Commits en la Rama \texttt{main}.}
+\end{table}
+
+% =========================================================================
+% 7. CONCLUSIONES
+% =========================================================================
+\section{Conclusiones}
+El desarrollo del proyecto \textbf{RawTune Mobile} demostró la viabilidad y solidez del patrón de arquitectura MVVM combinado con Jetpack Compose. Se logró una separación absoluta entre las reglas de cálculo de hardware y la interfaz de usuario, garantizando componentes altamente reutilizables y fácilmente testeables gracias al desacoplamiento \textit{Stateless}. 
+
+Asimismo, se validó la persistencia local eficiente mediante \texttt{SharedPreferences}, permitiendo la permanencia de ensambles y la creación dinámica de nuevos componentes sin requerir el sobrecoste de motores SQL ni dependencias externas de red.
+
+% =========================================================================
+% 8. REFERENCIAS BIBLIOGRÁFICAS
+% =========================================================================
+\begin{thebibliography}{99}
+\bibitem{compose} Google Developers. (2026). \textit{Jetpack Compose: Guía de Arquitectura de la Interfaz de Usuario y State Hoisting}. Android Open Source Project. \url{https://developer.android.com/jetpack/compose}
+\bibitem{clean} Martin, R. C. (2018). \textit{Clean Architecture: A Craftsman's Guide to Software Structure and Design}. Prentice Hall.
+\bibitem{stateflow} JetBrains. (2026). \textit{StateFlow and SharedFlow: Reactive Stream Processing in Kotlin Coroutines}. \url{https://kotlinlang.org/api/kotlinx.coroutines/}
+\end{thebibliography}
+
+\end{document}
