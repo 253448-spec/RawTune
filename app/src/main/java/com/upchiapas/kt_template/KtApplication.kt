@@ -10,6 +10,6 @@ class KtApplication : Application() {
     }
 
     val rawTuneModule: RawTuneModule by lazy {
-        RawTuneModule()
+        RawTuneModule(this)
     }
 }

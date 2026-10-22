@@ -1,12 +1,19 @@
 package com.upchiapas.kt_template.rawtune.data.datasource
 
+import android.content.Context
+import android.content.SharedPreferences
 import com.upchiapas.kt_template.rawtune.data.model.AnalysisResult
 import com.upchiapas.kt_template.rawtune.data.model.CpuOption
 import com.upchiapas.kt_template.rawtune.data.model.HardwareSpecs
+import com.upchiapas.kt_template.rawtune.data.model.SavedHardwareProfile
 import java.util.Locale
 
-class RawTuneLocalDataSource {
+class RawTuneLocalDataSource(
+    context: Context? = null
+) {
+    private val prefs: SharedPreferences? = context?.getSharedPreferences("rawtune_storage", Context.MODE_PRIVATE)
 
+    // Catálogo base de procesadores (Datos semilla)
     private val cpuList = listOf(
         CpuOption(
             id = "r3_3200g",
@@ -47,6 +54,28 @@ class RawTuneLocalDataSource {
             threads = 24,
             baseScore = 95,
             recommendedRamType = "DDR5"
+        )
+    )
+
+    // Perfiles semilla en memoria en caso de no tener persistencia o arranque inicial
+    private val seedProfiles = mutableListOf(
+        SavedHardwareProfile(
+            id = "seed_1",
+            name = "Ensamble Base Oficina (Semilla)",
+            cpuName = "AMD Ryzen 3 3200G",
+            ramGb = 8,
+            ramType = "DDR4",
+            score = 50,
+            bottleneck = 35
+        ),
+        SavedHardwareProfile(
+            id = "seed_2",
+            name = "PC Gaming Recomendada (Semilla)",
+            cpuName = "AMD Ryzen 5 5600",
+            ramGb = 16,
+            ramType = "DDR4",
+            score = 78,
+            bottleneck = 17
         )
     )
 
@@ -127,5 +156,92 @@ class RawTuneLocalDataSource {
             summary = summary,
             recommendations = recommendations
         )
+    }
+
+    // Persistencia con SharedPreferences (Clave-Valor / Sin SQLite ni Room)
+    fun getSavedProfiles(): List<SavedHardwareProfile> {
+        val sp = prefs ?: return seedProfiles.toList()
+        val rawIds = sp.getString("profile_ids_list", null)
+        if (rawIds.isNullOrBlank()) {
+            return seedProfiles.toList()
+        }
+
+        val idList = rawIds.split(",").filter { it.isNotBlank() }
+        val loadedProfiles = mutableListOf<SavedHardwareProfile>()
+
+        for (id in idList) {
+            val name = sp.getString("prof_${id}_name", null) ?: continue
+            val cpu = sp.getString("prof_${id}_cpu", "AMD Ryzen 5 5600") ?: "AMD Ryzen 5 5600"
+            val ram = sp.getInt("prof_${id}_ram", 16)
+            val type = sp.getString("prof_${id}_type", "DDR4") ?: "DDR4"
+            val score = sp.getInt("prof_${id}_score", 70)
+            val bottleneck = sp.getInt("prof_${id}_bottleneck", 20)
+            val time = sp.getLong("prof_${id}_time", System.currentTimeMillis())
+
+            loadedProfiles.add(
+                SavedHardwareProfile(
+                    id = id,
+                    name = name,
+                    cpuName = cpu,
+                    ramGb = ram,
+                    ramType = type,
+                    score = score,
+                    bottleneck = bottleneck,
+                    timestamp = time
+                )
+            )
+        }
+
+        // Combinar datos persistidos con perfiles base semilla
+        return (loadedProfiles + seedProfiles).distinctBy { it.id }
+    }
+
+    fun saveProfile(profile: SavedHardwareProfile) {
+        val sp = prefs
+        if (sp == null) {
+            seedProfiles.add(0, profile)
+            return
+        }
+
+        val rawIds = sp.getString("profile_ids_list", "") ?: ""
+        val existingIds = rawIds.split(",").filter { it.isNotBlank() }.toMutableList()
+        if (!existingIds.contains(profile.id)) {
+            existingIds.add(0, profile.id)
+        }
+
+        sp.edit()
+            .putString("profile_ids_list", existingIds.joinToString(","))
+            .putString("prof_${profile.id}_name", profile.name)
+            .putString("prof_${profile.id}_cpu", profile.cpuName)
+            .putInt("prof_${profile.id}_ram", profile.ramGb)
+            .putString("prof_${profile.id}_type", profile.ramType)
+            .putInt("prof_${profile.id}_score", profile.score)
+            .putInt("prof_${profile.id}_bottleneck", profile.bottleneck)
+            .putLong("prof_${profile.id}_time", profile.timestamp)
+            .apply()
+    }
+
+    fun deleteProfile(profileId: String) {
+        val sp = prefs
+        if (sp == null) {
+            seedProfiles.removeAll { it.id == profileId }
+            return
+        }
+
+        val rawIds = sp.getString("profile_ids_list", "") ?: ""
+        val existingIds = rawIds.split(",").filter { it.isNotBlank() && it != profileId }
+
+        sp.edit()
+            .putString("profile_ids_list", existingIds.joinToString(","))
+            .remove("prof_${profileId}_name")
+            .remove("prof_${profileId}_cpu")
+            .remove("prof_${profileId}_ram")
+            .remove("prof_${profileId}_type")
+            .remove("prof_${profileId}_score")
+            .remove("prof_${profileId}_bottleneck")
+            .remove("prof_${profileId}_time")
+            .apply()
+
+        seedProfiles.removeAll { it.id == profileId }
     }
 }

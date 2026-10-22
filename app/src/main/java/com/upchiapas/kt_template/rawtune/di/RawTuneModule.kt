@@ -1,13 +1,16 @@
 package com.upchiapas.kt_template.rawtune.di
 
+import android.content.Context
 import com.upchiapas.kt_template.rawtune.data.datasource.RawTuneLocalDataSource
 import com.upchiapas.kt_template.rawtune.data.repository.RawTuneRepository
 import com.upchiapas.kt_template.rawtune.data.repository.RawTuneRepositoryImpl
 import com.upchiapas.kt_template.rawtune.presentation.viewmodels.RawTuneViewModelFactory
 
-class RawTuneModule {
+class RawTuneModule(
+    private val context: Context? = null
+) {
     private val localDataSource: RawTuneLocalDataSource by lazy {
-        RawTuneLocalDataSource()
+        RawTuneLocalDataSource(context)
     }
 
     val repository: RawTuneRepository by lazy {

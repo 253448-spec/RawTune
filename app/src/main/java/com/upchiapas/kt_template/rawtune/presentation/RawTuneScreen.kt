@@ -2,6 +2,7 @@ package com.upchiapas.kt_template.rawtune.presentation
 
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.upchiapas.kt_template.rawtune.presentation.viewmodels.RawTuneViewModel
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape

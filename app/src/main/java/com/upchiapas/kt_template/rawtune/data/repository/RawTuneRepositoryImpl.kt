@@ -4,6 +4,7 @@ import com.upchiapas.kt_template.rawtune.data.datasource.RawTuneLocalDataSource
 import com.upchiapas.kt_template.rawtune.data.model.AnalysisResult
 import com.upchiapas.kt_template.rawtune.data.model.CpuOption
 import com.upchiapas.kt_template.rawtune.data.model.HardwareSpecs
+import com.upchiapas.kt_template.rawtune.data.model.SavedHardwareProfile
 
 class RawTuneRepositoryImpl(
     private val dataSource: RawTuneLocalDataSource
@@ -19,5 +20,17 @@ class RawTuneRepositoryImpl(
 
     override fun analyzeHardware(specs: HardwareSpecs): AnalysisResult {
         return dataSource.calculateAnalysis(specs)
+    }
+
+    override fun getSavedProfiles(): List<SavedHardwareProfile> {
+        return dataSource.getSavedProfiles()
+    }
+
+    override fun saveProfile(profile: SavedHardwareProfile) {
+        dataSource.saveProfile(profile)
+    }
+
+    override fun deleteProfile(profileId: String) {
+        dataSource.deleteProfile(profileId)
     }
 }
